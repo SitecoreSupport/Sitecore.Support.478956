@@ -10,6 +10,7 @@
   using Sitecore.ContentTesting.ViewModel;
   using Sitecore.Data;
   using Sitecore.Data.Items;
+  using Sitecore.Diagnostics;
   using System;
   using System.Collections.Generic;
   using System.Linq;
@@ -65,7 +66,23 @@
               if (testConfiguration != null)
               {
                 var testId = testConfiguration.TestDefinitionItem.ID;
-                dictionary.Add(testId, testConfiguration);
+                var debugText = $"{testId}{testConfiguration.TestDefinitionItem?.InnerItem?.Paths.FullPath}, " +
+                  $"TestSet.Id: {testConfiguration.TestSet?.Id}, " +
+                  $"ContentItem: {testConfiguration.ContentItem?.ID}{testConfiguration.ContentItem?.Paths.FullPath}, " +
+                  $"Language: {testConfiguration.LanguageName}, " +
+                  $"TestSet.Name: {testConfiguration.TestSet?.Name}, " +
+                  $"TestType: {testConfiguration.TestType}, " +
+                  $"Variables.Count: {testConfiguration.Variables?.Count()}";
+
+                try
+                {
+                  Log.Debug($"SupportTestsController: Adding {debugText}...", this);
+                  dictionary.Add(testId, testConfiguration);
+                }
+                catch (Exception ex)
+                {
+                  throw new InvalidOperationException($"Failed to add {debugText}", ex);
+                }
 
                 var model = new ExecutedTestViewModel
                 {
